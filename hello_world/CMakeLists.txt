@@ -1,20 +1,27 @@
-cmake_minimum_required(VERSION 3.20.0)
+cmake_minimum_required(VERSION 3.20)
 
-# Find Zephyr and set the project name
+# Set the project name
+project(hello_world_python LANGUAGES CXX)
+
+# Find Python
+find_package(Python REQUIRED COMPONENTS Development)
+
 find_package(Zephyr REQUIRED HINTS $ENV{ZEPHYR_BASE})
 project(tensorflow_hello_world)
 
-# Disable thread-safe initialization of local statics (Zephyr-specific)
-set(NO_THREADSAFE_STATICS $<TARGET_PROPERTY:compiler-cpp,no_threadsafe_statics>)
-zephyr_compile_options($<$<COMPILE_LANGUAGE:CXX>:${NO_THREADSAFE_STATICS}>)
+# Set Python executable
+set(PYTHON_EXECUTABLE ${Python_EXECUTABLE})
 
-# Include the TensorFlow Lite Micro library
-# ${ZEPHYR_TFLM_MODULE_DIR} is the path to TensorFlow Lite Micro module in Zephyr
-zephyr_include_directories(${ZEPHYR_TFLM_MODULE_DIR})
 
-# Specify the source files for your application
-file(GLOB app_sources src/*)
-target_sources(app PRIVATE ${app_sources})
+add_custom_target(run_jupyter_notebook
+    COMMAND ${Python_EXECUTABLE} -m jupyter nbconvert --to notebook --execute --inplace train_hello_world_model.ipynb
+    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+    DEPENDS train_hello_world_model.ipynb
+)
 
-# Link TensorFlow Lite Micro library to your application
-target_link_libraries(app PRIVATE tensorflow_lite_micro)
+
+# Optionally, add any Python dependencies if needed
+# For example, if you have a requirements.txt
+# execute_process(COMMAND ${PYTHON_EXECUTABLE} -m pip install -r requirements.txt)
+
+# You can add more targets or options as necessary
