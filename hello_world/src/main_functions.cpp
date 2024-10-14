@@ -1,6 +1,7 @@
+ 
 /*
  * Copyright 2020 The TensorFlow Authors. All Rights Reserved.
- *
+ * gettimeofday
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -16,6 +17,7 @@
 
 #include "main_functions.h"
 #include <chrono>  // Libreria per misurare il tempo
+#include <sys/time.h> 
 #include <tensorflow/lite/micro/micro_mutable_op_resolver.h>
 #include "constants.h"
 #include "model.hpp"
@@ -24,6 +26,9 @@
 #include <tensorflow/lite/micro/micro_interpreter.h>
 #include <tensorflow/lite/micro/system_setup.h>
 #include <tensorflow/lite/schema/schema_generated.h>
+#include <zephyr/kernel.h>
+#include <zephyr/timing/timing.h>
+
 
 /* Globals, used for compatibility with Arduino-style sketches. */
 namespace {
@@ -85,6 +90,13 @@ void setup(void)
 void loop(void)
 {
 	    using namespace std::chrono;
+timing_t start_time, end_time;
+    uint64_t total_cycles;
+    uint64_t total_ns;
+
+    timing_init();
+    timing_start();
+ 
  	/* Calculate an x value to feed into the model. We compare the current
 	 * inference_count to the number of inferences per cycle to determine
 	 * our position within the range of possible x values the model was
@@ -98,7 +110,9 @@ void loop(void)
 	int8_t x_quantized = x / input->params.scale + input->params.zero_point;
 	/* Place the quantized input in the model's input tensor */
 	input->data.int8[0] = x_quantized;
-    auto start = high_resolution_clock::now();
+    //auto start = high_resolution_clock::now();
+    start_time = timing_counter_get();
+ 
 	/* Run inference, and report any error */
 	TfLiteStatus invoke_status = interpreter->Invoke();
 	if (invoke_status != kTfLiteOk) {
@@ -106,14 +120,19 @@ void loop(void)
 		return;
 	}
 
-	auto end = high_resolution_clock::now();
-    auto inference_time = duration_cast<microseconds>(end - start).count();
-	total_inference_time += inference_time;
+    end_time = timing_counter_get();
+
+	
+  total_cycles = timing_cycles_get(&start_time, &end_time);
+    total_ns = timing_cycles_to_ns(total_cycles);    
+    // Accumulate total inference time
+    total_inference_time += total_ns / 1'000;;
+    MicroPrintf("Tempo di inferenza: %llu microsecondi \n", total_ns / 1'000);
+
 
     
     // Stampa il tempo di inferenza
-    //åMicroPrintf("Tempo di inferenza: %ld microsecondi\n", inference_time);
-	/* Obtain the quantized output from model's output tensor */
+ 	/* Obtain the quantized output from model's output tensor */
 	int8_t y_quantized = output->data.int8[0];
 	/* Dequantize the output from integer to floating-point */
 	float y = (y_quantized - output->params.zero_point) * output->params.scale;
@@ -133,4 +152,13 @@ void loop(void)
 		inference_count = 0; // Reset the count
 		total_inference_time = 0; // Reset the total time
 	}
+}
+
+int gettimeofday(struct timeval *tv, void *tz) {
+    // Mock implementation, return 0 for success
+    if (tv) {
+        tv->tv_sec = 0;
+        tv->tv_usec = 0;
+    }
+    return 0;
 }

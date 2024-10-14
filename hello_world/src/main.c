@@ -15,9 +15,10 @@
  */
 
 #include "main_functions.h"
+//#include <zephyr/ztest.h>
 
 /* Increase number of loops to see full period of the sine curve */
-#define NUM_LOOPS 1000
+#define NUM_LOOPS 100
 
 /* This is the default main used on systems that have the standard C entry
  * point. Other devices (for example FreeRTOS or ESP32) that have different
