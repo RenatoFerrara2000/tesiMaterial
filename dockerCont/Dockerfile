@@ -8,11 +8,11 @@ RUN dpkg --add-architecture i386 && \
     apt-get clean
 
 # Copy the zephyr.exe file from the host machine to the container
-COPY zephyr.exe /FERRARA_BSC/environment_builder/test2/environment_builder/dockerCont/zephyr.exe
-COPY training.ipynb /FERRARA_BSC/environment_builder/test2/environment_builder/dockerCont/training.ipynb
+COPY zephyr.exe /FERRARA_BSC/environment_builder/test2/environment_builder/dockerCont/zephyrImageBundle/tesiMaterial/zephyr.exe
+COPY training.ipynb /FERRARA_BSC/environment_builder/test2/environment_builder/dockerCont/zephyrImageBundle/tesiMaterial/training.ipynb
 
 # Make sure the zephyr.exe file has the proper permissions
-RUN chmod +x /FERRARA_BSC/environment_builder/test2/environment_builder/dockerCont/zephyr.exe
+RUN chmod +x /FERRARA_BSC/environment_builder/test2/environment_builder/dockerCont/zephyrImageBundle/tesiMaterial/zephyr.exe
 
 #language model req
 RUN apt-get update && apt-get install -y python3 python3-pip 
